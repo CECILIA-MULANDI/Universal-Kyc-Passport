@@ -1,0 +1,170 @@
+.progress-steps {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin: 2rem 0;
+  padding: 0 1rem;
+  position: relative;
+}
+
+.step-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  position: relative;
+}
+
+.step-connector {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  z-index: 0;
+}
+
+.connector-line {
+  width: 100%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+.connector-line.completed {
+  background: #E6007A;
+  box-shadow: 0 0 10px rgba(230, 0, 122, 0.5);
+}
+
+.step-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 0.9rem;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.step-circle.active {
+  background: #E6007A;
+  border-color: #E6007A;
+  color: white;
+  box-shadow: 0 0 20px rgba(230, 0, 122, 0.6);
+  transform: scale(1.1);
+}
+
+.step-circle.completed {
+  background: #E6007A;
+  border-color: #E6007A;
+  color: white;
+  box-shadow: 0 0 15px rgba(230, 0, 122, 0.4);
+}
+
+.step-label {
+  margin-top: 0.75rem;
+  font-size: 0.875rem;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.step-label.active {
+  color: white;
+  font-weight: 600;
+}
+
+.step-label.completed {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+@media (max-width: 1024px) {
+  .progress-steps {
+    margin: 1.5rem 0;
+  }
+}
+
+@media (max-width: 768px) {
+  .progress-steps {
+    padding: 0;
+    margin: 1.5rem 0;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .step-item {
+    min-width: calc(50% - 0.5rem);
+    flex: 0 0 calc(50% - 0.5rem);
+  }
+
+  .step-item:nth-child(odd) {
+    padding-right: 0.5rem;
+  }
+
+  .step-item:nth-child(even) {
+    padding-left: 0.5rem;
+  }
+
+  .step-connector {
+    display: none;
+  }
+  
+  .step-label {
+    font-size: 0.75rem;
+    margin-top: 0.5rem;
+  }
+  
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+
+  .step-circle svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .progress-steps {
+    flex-direction: column;
+    gap: 1.5rem;
+    align-items: flex-start;
+  }
+
+  .step-item {
+    min-width: 100%;
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+    gap: 1rem;
+    padding: 0;
+  }
+
+  .step-item:nth-child(odd),
+  .step-item:nth-child(even) {
+    padding: 0;
+  }
+
+  .step-circle {
+    width: 36px;
+    height: 36px;
+    flex-shrink: 0;
+  }
+
+  .step-label {
+    margin-top: 0;
+    text-align: left;
+    font-size: 0.8rem;
+  }
+}
+
