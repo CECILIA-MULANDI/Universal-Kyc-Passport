@@ -6,7 +6,7 @@ Self-sovereign identity system enabling users to prove credentials (age, educati
 
 Users can upload identity documents (passport, ID, driver's license), extract data via OCR, generate zero-knowledge proofs, and create portable credentials stored on KILT Protocol. Credentials are reusable across platforms.
 
-**Core Principle:** Register once, use anywhere — users control their identity data.
+**Core Principle:** Register once, use anywhere; users control their identity data.
 
 ## Tech Stack
 
