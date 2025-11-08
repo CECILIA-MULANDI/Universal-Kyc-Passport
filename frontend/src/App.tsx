@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { extractDocumentData } from './services/ocr';
 import DocumentUpload from './components/DocumentUpload';
 import ProgressSteps from './components/ProgressSteps';
 import type { StepStatus } from './components/ProgressSteps';
@@ -57,16 +58,31 @@ function App() {
     setCurrentStep('extract');
     showToast('Extracting data from document...', 'info');
 
-    // Simulate OCR processing
-    setTimeout(() => {
-      setExtractedData({
-        birthdate: '1990-01-01',
-        documentNumber: 'ABC123456',
-      });
+    try {
+      const extracted = await extractDocumentData(
+        uploadedDocument.file,
+        uploadedDocument.documentType
+      );
+      
+      setExtractedData(extracted);
+      uploadedDocument.extractedData = extracted;
+      setUploadedDocument({ ...uploadedDocument });
+      
       setCurrentStep('proof');
       setIsProcessing(false);
       showToast('Data extracted successfully!', 'success');
-    }, 2000);
+    } catch (error) {
+      setIsProcessing(false);
+      const fullMessage = error instanceof Error ? error.message : 'Failed to extract data';
+      
+      // Log full error to console for debugging
+      console.error('Document extraction error:', fullMessage);
+      
+      // Show a concise message in toast, with first line of error
+      const toastMessage = fullMessage.split('\n')[0] || 'Failed to extract data from document';
+      showToast(toastMessage + ' (Check console for details)', 'error');
+      handleError(toastMessage);
+    }
   };
 
   const handleGenerateProof = async () => {
