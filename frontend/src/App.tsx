@@ -41,7 +41,13 @@ function App() {
     return 'pending';
   }
 
-  const handleDocumentUploaded = (document: UploadedDocument) => {
+  const handleDocumentUploaded = (document: UploadedDocument): void => {
+    // Only allow upload if wallet is connected
+    if (!connectedAddress) {
+      showToast('Please connect your wallet first before uploading a document', 'warning');
+      return;
+    }
+    
     setUploadedDocument(document);
     setCurrentStep('extract');
     showToast('Document uploaded successfully!', 'success');
@@ -135,6 +141,15 @@ function App() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleReupload = (): void => {
+    // Reset all document-related state
+    setUploadedDocument(null);
+    setExtractedData(null);
+    setCurrentStep('upload');
+    setIsProcessing(false);
+    showToast('You can now upload a new document', 'info');
+  };
+
   if (showLanding) {
     return (
       <div className="app">
@@ -181,20 +196,75 @@ function App() {
         {!isProcessing && (
           <>
             {currentStep === 'upload' && (
-              <DocumentUpload
-                onDocumentUploaded={handleDocumentUploaded}
-                onError={handleError}
-              />
+              <>
+                {!connectedAddress ? (
+                  <div className="step-content">
+                    <div className="info-card warning">
+                      <h3>Wallet Connection Required</h3>
+                      <p className="info-text">
+                        Please connect your wallet before uploading a document. 
+                        This ensures your credentials are securely linked to your wallet address.
+                      </p>
+                      <div className="action-section">
+                        <p className="warning-text">Connect your wallet using the button in the header above.</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <DocumentUpload
+                    onDocumentUploaded={handleDocumentUploaded}
+                    onError={handleError}
+                  />
+                )}
+              </>
             )}
 
             {currentStep === 'extract' && uploadedDocument && (
               <div className="step-content">
-                <DocumentUpload
-                  onDocumentUploaded={handleDocumentUploaded}
-                  onError={handleError}
-                  onProcess={handleProcessDocument}
-                  isProcessing={isProcessing}
-                />
+                <div className="info-card">
+                  <h3>Document Uploaded</h3>
+                  <div className="data-display">
+                    <div className="data-item">
+                      <span className="data-label">File:</span>
+                      <span className="data-value">{uploadedDocument.file.name}</span>
+                    </div>
+                    <div className="data-item">
+                      <span className="data-label">Type:</span>
+                      <span className="data-value">{uploadedDocument.documentType}</span>
+                    </div>
+                  </div>
+                  {uploadedDocument.preview && (
+                    <div className="preview-image-container" style={{ marginTop: '1rem' }}>
+                      <img 
+                        src={uploadedDocument.preview} 
+                        alt="Document preview" 
+                        style={{ maxWidth: '100%', maxHeight: '400px', borderRadius: '8px' }}
+                      />
+                    </div>
+                  )}
+                  <StatusBadge status="success" label="Ready to Process" />
+                </div>
+                <div className="action-section">
+                  <ActionButton
+                    onClick={handleProcessDocument}
+                    label="Extract Data from Document"
+                    variant="primary"
+                    loading={isProcessing}
+                    icon={
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                      </svg>
+                    }
+                  />
+                  <button onClick={handleReupload} className="reupload-button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    Reupload Document
+                  </button>
+                </div>
               </div>
             )}
 
@@ -227,6 +297,14 @@ function App() {
                       </svg>
                     }
                   />
+                  <button onClick={handleReupload} className="reupload-button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    Reupload Document
+                  </button>
                 </div>
               </div>
             )}
@@ -255,6 +333,14 @@ function App() {
                   {!connectedAddress && (
                     <p className="warning-text">Connect your wallet to create credential</p>
                   )}
+                  <button onClick={handleReupload} className="reupload-button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    Reupload Document
+                  </button>
                 </div>
               </div>
             )}
@@ -277,6 +363,14 @@ function App() {
                       </svg>
                     }
                   />
+                  <button onClick={handleReupload} className="reupload-button">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                      <polyline points="17 8 12 3 7 8" />
+                      <line x1="12" y1="3" x2="12" y2="15" />
+                    </svg>
+                    Reupload Document
+                  </button>
                 </div>
               </div>
             )}

@@ -107,6 +107,11 @@
   border-color: rgba(34, 197, 94, 0.3);
 }
 
+.info-card.warning {
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(251, 191, 36, 0.05);
+}
+
 .data-display {
   margin: 1.5rem 0;
   display: flex;
@@ -154,6 +159,38 @@
   align-items: center;
   gap: 1rem;
   margin-top: 2rem;
+}
+
+.reupload-button {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.reupload-button:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: white;
+}
+
+.reupload-button:active {
+  transform: scale(0.98);
+}
+
+.reupload-button svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
 }
 
 @media (max-width: 1024px) {

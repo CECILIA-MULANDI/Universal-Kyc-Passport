@@ -51,19 +51,19 @@ function normalizeOCRText(text: string): string {
     // Fix month abbreviations: 0CT -> OCT, 1AN -> JAN, etc.
     .replace(/\b0CT\b/gi, 'OCT')
     .replace(/\b1AN\b/gi, 'JAN')
-    .replace(/\bFEB\b/gi, 'FEB') // Usually correct
-    .replace(/\bMAR\b/gi, 'MAR') // Usually correct
-    .replace(/\bAPR\b/gi, 'APR') // Usually correct
-    .replace(/\bMAY\b/gi, 'MAY') // Usually correct
+    .replace(/\bFEB\b/gi, 'FEB')
+    .replace(/\bMAR\b/gi, 'MAR') 
+    .replace(/\bAPR\b/gi, 'APR')
+    .replace(/\bMAY\b/gi, 'MAY') 
     .replace(/\b1UN\b/gi, 'JUN')
     .replace(/\b1UL\b/gi, 'JUL')
-    .replace(/\bAUG\b/gi, 'AUG') // Usually correct
-    .replace(/\bSEP\b/gi, 'SEP') // Usually correct
-    .replace(/\b0CT\b/gi, 'OCT') // Again for lowercase
+    .replace(/\bAUG\b/gi, 'AUG') 
+    .replace(/\bSEP\b/gi, 'SEP')
+    .replace(/\b0CT\b/gi, 'OCT') 
     .replace(/\bN0V\b/gi, 'NOV')
-    .replace(/\bDEC\b/gi, 'DEC') // Usually correct
+    .replace(/\bDEC\b/gi, 'DEC') 
     // Fix other common OCR errors
-    .replace(/\b0\b/g, 'O') // Standalone 0 might be O in some contexts
+    .replace(/\b0\b/g, 'O') 
     .replace(/1([A-Z])/g, (match, letter) => {
       // If 1 is followed by a letter, it might be I
       if (['A', 'E', 'O', 'U'].includes(letter)) {
@@ -141,7 +141,7 @@ function findBirthdate(text: string): string | null {
     'DOB:',
     'BIRTHDATE',
     'BIRTH DATE:',
-    'BORN:', // Common in passports
+    'BORN:', 
   ];
   
   // First, try to find dates near birthdate keywords
@@ -286,13 +286,12 @@ export function parseDocumentData(
   // Extract birthdate with improved logic
   // Document type can be used to adjust parsing strategies (e.g., passport vs ID formats)
   // For now, we use a generic approach that works for all document types
-  // Future: Use documentType to adjust date format preferences (DD/MM vs MM/DD)
+ 
   const birthdate = findBirthdate(preprocessedText);
   if (birthdate) {
     result.birthdate = birthdate;
   }
   
-  // Log document type for debugging (can be removed in production)
   if (process.env.NODE_ENV === 'development') {
     console.log(`Parsing ${documentType} document`);
   }
@@ -338,7 +337,7 @@ export function parseDocumentData(
     }
   }
   
-  // Extract name (improved patterns)
+  // Extract name 
   // Common false positives to exclude
   const falsePositives = [
     'REPUBLIC', 'GOVERNMENT', 'PASSPORT', 'PASIPASSEPORT', 'JAMHURI', 'REPUBLIQUE',
@@ -709,7 +708,7 @@ export async function extractDocumentData(
     errorMessage += '4. The image has sufficient resolution\n';
     errorMessage += '\nCheck the browser console for the full OCR text output.';
     
-    // Log the full text for debugging
+
     console.error('Full OCR Text (for debugging):', text);
     console.error('All found dates:', allDates);
     
