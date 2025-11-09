@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { extractDocumentData } from './services/ocr';
 import DocumentUpload from './components/DocumentUpload';
 import ProgressSteps from './components/ProgressSteps';
@@ -14,14 +14,99 @@ import './App.css';
 
 type ProcessStep = 'upload' | 'extract' | 'proof' | 'credential' | 'verify';
 
+const STORAGE_KEYS = {
+  SHOW_LANDING: 'proofme_showLanding',
+  CURRENT_STEP: 'proofme_currentStep',
+  EXTRACTED_DATA: 'proofme_extractedData',
+  UPLOADED_DOCUMENT: 'proofme_uploadedDocument',
+  CONNECTED_ADDRESS: 'proofme_connectedAddress',
+};
+
 function App() {
-  const [showLanding, setShowLanding] = useState(true);
-  const [uploadedDocument, setUploadedDocument] = useState<UploadedDocument | null>(null);
-  const [connectedAddress, setConnectedAddress] = useState<string>('');
-  const [currentStep, setCurrentStep] = useState<ProcessStep>('upload');
+  // Initialize state from localStorage or defaults
+  const [showLanding, setShowLanding] = useState(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.SHOW_LANDING);
+    return saved ? saved === 'true' : true;
+  });
+  const [uploadedDocument, setUploadedDocument] = useState<UploadedDocument | null>(() => {
+   
+    return null;
+  });
+  const [connectedAddress, setConnectedAddress] = useState<string>(() => {
+    return localStorage.getItem(STORAGE_KEYS.CONNECTED_ADDRESS) || '';
+  });
+  const [currentStep, setCurrentStep] = useState<ProcessStep>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.CURRENT_STEP);
+    return (saved as ProcessStep) || 'upload';
+  });
   const [isProcessing, setIsProcessing] = useState(false);
-  const [extractedData, setExtractedData] = useState<any>(null);
+  const [extractedData, setExtractedData] = useState<any>(() => {
+    const saved = localStorage.getItem(STORAGE_KEYS.EXTRACTED_DATA);
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
   const { showToast, removeToast, toasts } = useToast();
+
+  // Handle reload: if on extract step but no document (can't restore File)
+  useEffect(() => {
+    if (currentStep === 'extract' && !uploadedDocument) {
+      if (extractedData) {
+        // If we have extracted data, move to proof step
+        setCurrentStep('proof');
+      } else {
+        // If we have nothing, go back to upload
+        setCurrentStep('upload');
+      }
+    }
+  }, [currentStep, uploadedDocument, extractedData]);
+
+  // Save state to localStorage whenever it changes
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.SHOW_LANDING, String(showLanding));
+  }, [showLanding]);
+
+  useEffect(() => {
+    localStorage.setItem(STORAGE_KEYS.CURRENT_STEP, currentStep);
+  }, [currentStep]);
+
+  useEffect(() => {
+    if (extractedData) {
+      localStorage.setItem(STORAGE_KEYS.EXTRACTED_DATA, JSON.stringify(extractedData));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.EXTRACTED_DATA);
+    }
+  }, [extractedData]);
+
+  useEffect(() => {
+    if (uploadedDocument) {
+      // Store document metadata (without File object which can't be serialized)
+      const docToStore = {
+        preview: uploadedDocument.preview,
+        documentType: uploadedDocument.documentType,
+        extractedData: uploadedDocument.extractedData,
+        fileName: uploadedDocument.file?.name,
+        fileSize: uploadedDocument.file?.size,
+        fileType: uploadedDocument.file?.type,
+      };
+      localStorage.setItem(STORAGE_KEYS.UPLOADED_DOCUMENT, JSON.stringify(docToStore));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.UPLOADED_DOCUMENT);
+    }
+  }, [uploadedDocument]);
+
+  useEffect(() => {
+    if (connectedAddress) {
+      localStorage.setItem(STORAGE_KEYS.CONNECTED_ADDRESS, connectedAddress);
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.CONNECTED_ADDRESS);
+    }
+  }, [connectedAddress]);
 
   const steps = [
     { id: 1, label: 'Upload', status: getStepStatus('upload') as StepStatus },
@@ -150,6 +235,18 @@ function App() {
     showToast('You can now upload a new document', 'info');
   };
 
+  const handleReturnToLanding = (): void => {
+    setShowLanding(true);
+    // Clear all state when returning to landing
+    setUploadedDocument(null);
+    setExtractedData(null);
+    setCurrentStep('upload');
+    setIsProcessing(false);
+    // Optionally clear wallet connection too
+    // setConnectedAddress('');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   if (showLanding) {
     return (
       <div className="app">
@@ -163,9 +260,17 @@ function App() {
     <div className="app">
       <header className="app-header">
         <div className="header-content">
-          <div>
-            <h1>Universal KYC Passport</h1>
-            <p>Self-Sovereign Identity System</p>
+          <div className="header-left">
+            <button onClick={handleReturnToLanding} className="return-to-landing-button" title="Return to landing page">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+                <polyline points="9 22 9 12 15 12 15 22" />
+              </svg>
+            </button>
+            <div>
+              <h1>Universal KYC Passport</h1>
+              <p>Self-Sovereign Identity System</p>
+            </div>
           </div>
           <WalletConnection
             onConnect={setConnectedAddress}
@@ -217,6 +322,49 @@ function App() {
                   />
                 )}
               </>
+            )}
+
+            {currentStep === 'extract' && !uploadedDocument && extractedData && (
+              <div className="step-content">
+                <div className="info-card warning">
+                  <h3>Document Not Available</h3>
+                  <p className="info-text">
+                    The document file cannot be restored after reload. However, your extracted data is still available.
+                  </p>
+                  <div className="data-display" style={{ marginTop: '1rem' }}>
+                    <div className="data-item">
+                      <span className="data-label">Birthdate:</span>
+                      <span className="data-value">{extractedData.birthdate}</span>
+                    </div>
+                    <div className="data-item">
+                      <span className="data-label">Document Number:</span>
+                      <span className="data-value">{extractedData.documentNumber}</span>
+                    </div>
+                  </div>
+                  <div className="action-section">
+                    <ActionButton
+                      onClick={() => setCurrentStep('proof')}
+                      label="Continue to Generate Proof"
+                      variant="primary"
+                      icon={
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path d="M12 2L2 7l10 5 10-5-10-5z" />
+                          <path d="M2 17l10 5 10-5" />
+                          <path d="M2 12l10 5 10-5" />
+                        </svg>
+                      }
+                    />
+                    <button onClick={handleReupload} className="reupload-button">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                        <polyline points="17 8 12 3 7 8" />
+                        <line x1="12" y1="3" x2="12" y2="15" />
+                      </svg>
+                      Upload New Document
+                    </button>
+                  </div>
+                </div>
+              </div>
             )}
 
             {currentStep === 'extract' && uploadedDocument && (

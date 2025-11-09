@@ -24,8 +24,47 @@
   gap: 2rem;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  text-align: left;
+}
+
 .header-content > div:first-child {
   text-align: left;
+}
+
+.return-to-landing-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.return-to-landing-button:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
+  color: white;
+  transform: translateY(-1px);
+}
+
+.return-to-landing-button:active {
+  transform: translateY(0);
+}
+
+.return-to-landing-button svg {
+  width: 20px;
+  height: 20px;
 }
 
 .app-header h1 {
@@ -223,6 +262,11 @@
     flex-direction: column;
     text-align: center;
     gap: 1rem;
+  }
+  
+  .header-left {
+    width: 100%;
+    justify-content: center;
   }
   
   .header-content > div:first-child {
