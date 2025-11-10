@@ -10,6 +10,7 @@ import StatusBadge from './components/StatusBadge';
 import ActionButton from './components/ActionButton';
 import LandingPage from './components/LandingPage';
 import type { UploadedDocument } from './types';
+import { generateAgeProof } from './services/zkProof';
 import './App.css';
 
 type ProcessStep = 'upload' | 'extract' | 'proof' | 'credential' | 'verify';
@@ -20,6 +21,7 @@ const STORAGE_KEYS = {
   EXTRACTED_DATA: 'proofme_extractedData',
   UPLOADED_DOCUMENT: 'proofme_uploadedDocument',
   CONNECTED_ADDRESS: 'proofme_connectedAddress',
+  ZK_PROOF: 'proofme_zkProof',
 };
 
 function App() {
@@ -40,6 +42,36 @@ function App() {
     return (saved as ProcessStep) || 'upload';
   });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [zkProof, setZkProof] = useState<{ proof: Uint8Array; publicInputs: string[] } | null>(() => {
+    // Note: Uint8Array can't be directly stored in localStorage
+    // We'll store it as base64 string
+    const saved = localStorage.getItem(STORAGE_KEYS.ZK_PROOF);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        return {
+          proof: Uint8Array.from(atob(parsed.proof), c => c.charCodeAt(0)),
+          publicInputs: parsed.publicInputs,
+        };
+      } catch {
+        return null;
+      }
+    }
+    return null;
+  });
+  
+  // Add useEffect to persist zkProof
+  useEffect(() => {
+    if (zkProof) {
+      const proofToStore = {
+        proof: btoa(String.fromCharCode(...zkProof.proof)),
+        publicInputs: zkProof.publicInputs,
+      };
+      localStorage.setItem(STORAGE_KEYS.ZK_PROOF, JSON.stringify(proofToStore));
+    } else {
+      localStorage.removeItem(STORAGE_KEYS.ZK_PROOF);
+    }
+  }, [zkProof]);
   const [extractedData, setExtractedData] = useState<any>(() => {
     const saved = localStorage.getItem(STORAGE_KEYS.EXTRACTED_DATA);
     if (saved) {
@@ -183,12 +215,24 @@ function App() {
     setCurrentStep('proof');
     showToast('Generating zero-knowledge proof...', 'info');
 
-    // Simulate proof generation
-    setTimeout(() => {
+    try {
+      // Initialize Noir on first use
+      const { initializeNoir } = await import('./services/zkProof');
+      await initializeNoir();
+      
+      // Generate proof
+      const proofResult = await generateAgeProof(extractedData.birthdate, 18);
+      setZkProof(proofResult);
+      
       setCurrentStep('credential');
       setIsProcessing(false);
       showToast('Proof generated successfully!', 'success');
-    }, 3000);
+    } catch (error) {
+      setIsProcessing(false);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to generate proof';
+      console.error('Proof generation error:', errorMessage);
+      showToast(errorMessage, 'error');
+    }
   };
 
   const handleCreateCredential = async () => {

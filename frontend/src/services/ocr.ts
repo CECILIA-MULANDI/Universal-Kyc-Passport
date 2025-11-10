@@ -83,18 +83,21 @@ function extractAllDates(text: string): string[] {
   const normalized = normalizeOCRText(text);
   
   // Comprehensive date patterns
-  const datePatterns = [
-    // DD/MM/YYYY or MM/DD/YYYY
-    /\b(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{2,4})\b/g,
-    // YYYY/MM/DD
-    /\b(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})\b/g,
-    // DD-MMM-YYYY (e.g., 15-Jan-1990, 17-0CT-2001)
-    /\b(\d{1,2})[\/\-\.\s]+([A-Z0-9]{3})[\/\-\.\s]+(\d{2,4})\b/gi,
-    // DD MMM YYYY (e.g., 15 Jan 1990, 17 0CT 2001) - this is the key one!
-    /\b(\d{1,2})\s+([A-Z0-9]{3})\s+(\d{2,4})\b/gi,
-    // DD MMMM YYYY (full month names)
-    /\b(\d{1,2})\s+(JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)\s+(\d{2,4})\b/gi,
-  ];
+    // Comprehensive date patterns
+    const datePatterns = [
+      // DD/MM/YYYY or MM/DD/YYYY (with optional spaces after separators)
+      /\b(\d{1,2})[\/\-\.]\s*(\d{1,2})[\/\-\.]\s*(\d{2,4})\b/g,
+      // YYYY/MM/DD (with optional spaces after separators)
+      /\b(\d{4})[\/\-\.]\s*(\d{1,2})[\/\-\.]\s*(\d{1,2})\b/g,
+      // DD-MMM-YYYY (e.g., 15-Jan-1990, 17-0CT-2001)
+      /\b(\d{1,2})[\/\-\.\s]+([A-Z0-9]{3})[\/\-\.\s]+(\d{2,4})\b/gi,
+      // DD MMM YYYY (e.g., 15 Jan 1990, 17 0CT 2001) - this is the key one!
+      /\b(\d{1,2})\s+([A-Z0-9]{3})\s+(\d{2,4})\b/gi,
+      // DD MMMM YYYY (full month names)
+      /\b(\d{1,2})\s+(JANUARY|FEBRUARY|MARCH|APRIL|MAY|JUNE|JULY|AUGUST|SEPTEMBER|OCTOBER|NOVEMBER|DECEMBER)\s+(\d{2,4})\b/gi,
+      // DD. MM. YYYY format (with spaces after dots) - NEW PATTERN
+      /\b(\d{1,2})\.\s+(\d{1,2})\.\s+(\d{2,4})\b/g,
+    ];
   
   for (const pattern of datePatterns) {
     const matches = normalized.matchAll(pattern);
@@ -150,7 +153,7 @@ function findBirthdate(text: string): string | null {
     if (keywordIndex !== -1) {
       // Extract text around the keyword (150 characters before and after)
       const start = Math.max(0, keywordIndex - 75);
-      const end = Math.min(originalText.length, keywordIndex + keyword.length + 150);
+      const end = Math.min(originalText.length, keywordIndex + keyword.length + 200);
       const context = originalText.substring(start, end);
       
       // Find all dates in this context

@@ -1,6 +1,5 @@
 [package]
 name = "age_verification"
 type = "bin"
-authors = [""]
-
-[dependencies]
+authors = ["ProofMe"]
+compiler_version = ">=0.36.0"
