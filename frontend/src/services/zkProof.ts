@@ -1,7 +1,7 @@
 import { Noir } from "@noir-lang/noir_js";
 import type { InputMap } from "@noir-lang/noir_js";
 import { BarretenbergBackend } from "@noir-lang/backend_barretenberg";
-import circuit from "../../../circuits/age_verification/target/age_verification.json"
+import circuit from "../assets/circuits/age_verification.json"
 export interface ProofInputs{
     birthdate_year: number;
     birthdate_month: number;

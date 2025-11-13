@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "prebuild": "node --input-type=module -e \"import fs from 'fs'; import path from 'path'; import { fileURLToPath } from 'url'; const __dirname = path.dirname(fileURLToPath(import.meta.url)); const src = path.join(__dirname, '../circuits/age_verification/target/age_verification.json'); const dest = path.join(__dirname, 'src/assets/circuits/age_verification.json'); if (fs.existsSync(src)) { fs.mkdirSync(path.dirname(dest), { recursive: true }); fs.copyFileSync(src, dest); console.log('Copied circuit JSON'); } else { console.warn('Circuit JSON not found, using existing copy'); }\"",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview"
