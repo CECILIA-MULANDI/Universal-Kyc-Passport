@@ -22,6 +22,7 @@ const STORAGE_KEYS = {
   UPLOADED_DOCUMENT: 'proofme_uploadedDocument',
   CONNECTED_ADDRESS: 'proofme_connectedAddress',
   ZK_PROOF: 'proofme_zkProof',
+  CREDENTIAL_HASH: 'proofme_credentialHash',
 };
 
 function App() {
@@ -58,6 +59,9 @@ function App() {
       }
     }
     return null;
+  });
+  const [credentialHash, setCredentialHash] = useState<string>(() => {
+    return localStorage.getItem(STORAGE_KEYS.CREDENTIAL_HASH) || '';
   });
   
   // Add useEffect to persist zkProof
@@ -159,12 +163,6 @@ function App() {
   }
 
   const handleDocumentUploaded = (document: UploadedDocument): void => {
-    // Only allow upload if wallet is connected
-    if (!connectedAddress) {
-      showToast('Please connect your wallet first before uploading a document', 'warning');
-      return;
-    }
-    
     setUploadedDocument(document);
     setCurrentStep('extract');
     showToast('Document uploaded successfully!', 'success');
@@ -236,33 +234,99 @@ function App() {
   };
 
   const handleCreateCredential = async () => {
-    if (!connectedAddress) {
-      showToast('Please connect your wallet first', 'warning');
+    if (!zkProof || !extractedData) {
+      showToast('Please generate a proof first', 'warning');
       return;
     }
 
     setIsProcessing(true);
     setCurrentStep('credential');
-    showToast('Creating credential on KILT...', 'info');
+    showToast('Creating credential...', 'info');
 
-    // Simulate credential creation
-    setTimeout(() => {
+    try {
+      // Create a simple credential hash from the proof and data
+      const credentialData = {
+        proofHash: btoa(String.fromCharCode(...zkProof.proof.slice(0, 32))),
+        publicInputs: zkProof.publicInputs,
+        extractedData: {
+          documentType: extractedData.documentType,
+          country: extractedData.country,
+        },
+        createdAt: new Date().toISOString(),
+        walletAddress: connectedAddress || 'anonymous',
+      };
+
+      // Create credential hash
+      const credentialString = JSON.stringify(credentialData);
+      const encoder = new TextEncoder();
+      const data = encoder.encode(credentialString);
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      const credentialHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+
+      // Store credential locally
+      const storageKey = `credential_${credentialHash}`;
+      localStorage.setItem(storageKey, JSON.stringify({
+        ...credentialData,
+        credentialHash,
+      }));
+
+      setCredentialHash(credentialHash);
       setCurrentStep('verify');
       setIsProcessing(false);
       showToast('Credential created successfully!', 'success');
-    }, 2500);
+    } catch (error) {
+      setIsProcessing(false);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to create credential';
+      console.error('Credential creation error:', errorMessage);
+      showToast(errorMessage, 'error');
+    }
   };
 
   const handleVerify = async () => {
+    if (!credentialHash) {
+      showToast('No credential found to verify', 'warning');
+      return;
+    }
+
     setIsProcessing(true);
     setCurrentStep('verify');
     showToast('Verifying credential...', 'info');
 
-    // Simulate verification
-    setTimeout(() => {
+    try {
+      // Verify credential from local storage
+      const storageKey = `credential_${credentialHash}`;
+      const storedCredential = localStorage.getItem(storageKey);
+
+      if (!storedCredential) {
+        setIsProcessing(false);
+        showToast('Credential not found', 'error');
+        return;
+      }
+
+      // Verify the proof if available
+      if (zkProof) {
+        const { verifyProof } = await import('./services/zkProof');
+        const isValid = await verifyProof(zkProof.proof, zkProof.publicInputs);
+        
+        setIsProcessing(false);
+        
+        if (isValid) {
+          showToast('Credential verified successfully! Proof is valid.', 'success');
+        } else {
+          showToast('Credential verification failed - proof is invalid', 'error');
+        }
+      } else {
+        // Just verify credential exists
+        setIsProcessing(false);
+        showToast('Credential verified successfully!', 'success');
+      }
+    } catch (error) {
       setIsProcessing(false);
-      showToast('Verification complete!', 'success');
-    }, 2000);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to verify credential';
+      console.error('Verification error:', errorMessage);
+      showToast(errorMessage, 'error');
+    }
   };
 
   const handleGetStarted = () => {
@@ -335,7 +399,7 @@ function App() {
         )}
 
         {isProcessing && currentStep === 'credential' && (
-          <LoadingSpinner size="large" message="Creating credential on KILT..." />
+          <LoadingSpinner size="large" message="Creating credential..." />
         )}
 
         {isProcessing && currentStep === 'verify' && (
@@ -345,27 +409,10 @@ function App() {
         {!isProcessing && (
           <>
             {currentStep === 'upload' && (
-              <>
-                {!connectedAddress ? (
-                  <div className="step-content">
-                    <div className="info-card warning">
-                      <h3>Wallet Connection Required</h3>
-                      <p className="info-text">
-                        Please connect your wallet before uploading a document. 
-                        This ensures your credentials are securely linked to your wallet address.
-                      </p>
-                      <div className="action-section">
-                        <p className="warning-text">Connect your wallet using the button in the header above.</p>
-                      </div>
-                    </div>
-                  </div>
-                ) : (
-                  <DocumentUpload
-                    onDocumentUploaded={handleDocumentUploaded}
-                    onError={handleError}
-                  />
-                )}
-              </>
+              <DocumentUpload
+                onDocumentUploaded={handleDocumentUploaded}
+                onError={handleError}
+              />
             )}
 
             {currentStep === 'extract' && !uploadedDocument && extractedData && (
@@ -511,9 +558,8 @@ function App() {
                 <div className="action-section">
                   <ActionButton
                     onClick={handleCreateCredential}
-                    label="Create KILT Credential"
+                    label="Create Credential"
                     variant="secondary"
-                    disabled={!connectedAddress}
                     icon={
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
@@ -522,9 +568,6 @@ function App() {
                       </svg>
                     }
                   />
-                  {!connectedAddress && (
-                    <p className="warning-text">Connect your wallet to create credential</p>
-                  )}
                   <button onClick={handleReupload} className="reupload-button">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
@@ -542,7 +585,7 @@ function App() {
                 <div className="info-card success">
                   <h3>Credential Created</h3>
                   <StatusBadge status="success" label="Credential Active" />
-                  <p className="info-text">Your credential has been stored on KILT Protocol.</p>
+                  <p className="info-text">Your credential has been created and stored locally.</p>
                 </div>
                 <div className="action-section">
                   <ActionButton

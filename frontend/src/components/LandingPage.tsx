@@ -180,7 +180,7 @@ export default function LandingPage({ onGetStarted }: LandingPageProps) {
             <div className="step-number">4</div>
             <div className="step-content">
               <h3>Create Credential</h3>
-              <p>Store credential on KILT Protocol blockchain</p>
+              <p>Generate and store your verifiable credential</p>
             </div>
           </div>
           <div className="timeline-step">

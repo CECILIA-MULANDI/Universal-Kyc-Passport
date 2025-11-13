@@ -4,7 +4,7 @@ Self-sovereign identity system enabling users to prove credentials (age, educati
 
 ## Overview
 
-Users can upload identity documents (passport, ID, driver's license), extract data via OCR, generate zero-knowledge proofs, and create portable credentials stored on KILT Protocol. Credentials are reusable across platforms.
+Users can upload identity documents (passport, ID, driver's license), extract data via OCR, generate zero-knowledge proofs, and create verifiable credentials. Credentials are stored locally and can be verified using the generated ZK proofs.
 
 **Core Principle:** Register once, use anywhere; users control their identity data.
 
@@ -12,10 +12,9 @@ Users can upload identity documents (passport, ID, driver's license), extract da
 
 - **Frontend:** React + TypeScript + Vite
 - **ZK Proofs:** Noir.js (browser-based)
-- **Credentials:** KILT Protocol (Spiritnet)
-- **Smart Contracts:** ink! (Passethub testnet)
+- **Credentials:** Local storage with ZK proof verification
 - **OCR:** Tesseract.js
-- **Wallet:** Talisman
+- **Wallet:** Talisman (optional, for future blockchain integration)
 
 ## Project Structure
 
@@ -48,8 +47,8 @@ npm run build
 - Document upload (Passport, ID, Driver's License)
 - OCR data extraction
 - Zero-knowledge proof generation
-- KILT credential creation
-- Smart contract verification
+- Credential creation and storage
+- Credential verification using ZK proofs
 
 
 

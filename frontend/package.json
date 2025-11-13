@@ -20,6 +20,7 @@
     "tesseract.js": "^6.0.1"
   },
   "devDependencies": {
+    "@aztec/bb.js": "^2.1.4",
     "@eslint/js": "^9.36.0",
     "@types/node": "^24.6.0",
     "@types/react": "^19.1.16",

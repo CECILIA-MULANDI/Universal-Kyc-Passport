@@ -17,3 +17,9 @@ export interface UploadedDocument {
   error?: string;
 }
 
+export interface CredentialInfo {
+  credentialHash: string;
+  createdAt: string;
+  did?: string;
+  attestationId?: string;
+}
