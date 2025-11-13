@@ -1,0 +1,21 @@
+# Noir circuit build artifacts
+**/target/
+circuits/**/target/
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+*.log
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+

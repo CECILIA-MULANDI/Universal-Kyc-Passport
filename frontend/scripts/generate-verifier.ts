@@ -25,7 +25,7 @@ function getBytecode(bytecodePath: string): Uint8Array {
 
 async function generateVerifier() {
   console.log('🚀 Starting verifier generation...');
-  console.log(`📁 Circuit: ${CIRCUIT_PATH}`);
+  console.log(` Circuit: ${CIRCUIT_PATH}`);
   
   // Read and decompress circuit
   console.log('📖 Reading circuit...');
@@ -37,7 +37,7 @@ async function generateVerifier() {
   
   try {
     // Get circuit size
-    console.log('📏 Computing circuit size...');
+    console.log('Computing circuit size...');
     const recursive = false;
     const honkRecursion = false; // Use UltraPlonk for Solidity verifier generation
     const [total, subgroupSize] = await api.acirGetCircuitSizes(bytecode, recursive, honkRecursion);
@@ -51,7 +51,7 @@ async function generateVerifier() {
     }
     
     // Initialize CRS (Common Reference String)
-    console.log('🔑 Loading CRS...');
+    console.log('Loading CRS...');
     const crs = await Crs.new(subgroupSize + 1);
     await api.srsInitSrs(
       new RawBuffer(crs.getG1Data()),
@@ -60,25 +60,25 @@ async function generateVerifier() {
     );
     
     // Generate verification key using UltraHonk with Keccak (for Solidity compatibility)
-    console.log('🔑 Generating verification key (UltraHonk Keccak)...');
+    console.log('Generating verification key (UltraHonk Keccak)...');
     const vk = await api.acirWriteVkUltraKeccakHonk(bytecode);
     
     // Write verification key to file
-    console.log(`💾 Writing verification key to ${VK_OUTPUT_PATH}...`);
+    console.log(`Writing verification key to ${VK_OUTPUT_PATH}...`);
     writeFileSync(VK_OUTPUT_PATH, vk);
-    console.log('✅ Verification key generated!');
+    console.log('Verification key generated!');
     
     // Generate Solidity verifier contract using UltraHonk Keccak
-    console.log('📝 Generating Solidity verifier contract (UltraHonk Keccak)...');
+    console.log('Generating Solidity verifier contract (UltraHonk Keccak)...');
     const contract = await api.acirHonkSolidityVerifier(bytecode, vk);
     
     // Write Solidity verifier to file
-    console.log(`💾 Writing Solidity verifier to ${VERIFIER_OUTPUT_PATH}...`);
+    console.log(`Writing Solidity verifier to ${VERIFIER_OUTPUT_PATH}...`);
     mkdirSync(dirname(VERIFIER_OUTPUT_PATH), { recursive: true });
     writeFileSync(VERIFIER_OUTPUT_PATH, contract);
-    console.log('✅ Solidity verifier generated!');
+    console.log('Solidity verifier generated!');
     
-    console.log('\n🎉 Success! Files generated:');
+    console.log('\n Success! Files generated:');
     console.log(`   VK: ${VK_OUTPUT_PATH}`);
     console.log(`   Verifier: ${VERIFIER_OUTPUT_PATH}`);
     
